@@ -106,7 +106,7 @@
     let isManager = false;
 
     function fetchActivities() {
-      fetch('https://your-vercel-app.vercel.app/add_activity')
+      fetch('https://my-website-psi-tan-33.vercel.app/add_activity')
         .then(response => response.json())
         .then(data => {
           const activitiesList = document.getElementById('activities-list');
@@ -156,7 +156,7 @@
     }
 
     function toggleAssignment(activityId, participant) {
-      fetch(`https://your-vercel-app.vercel.app/approve_applications`, {
+      fetch(`https://my-website-psi-tan-33.vercel.app/approve_applications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -178,7 +178,7 @@
     function login() {
       const username = document.getElementById('login-username').value;
       const password = document.getElementById('login-password').value;
-      fetch('https://your-vercel-app.vercel.app/login', {
+      fetch('https://my-website-psi-tan-33.vercel.app/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -204,7 +204,7 @@
     }
 
     function logout() {
-      fetch('https://your-vercel-app.vercel.app/logout', {
+      fetch('https://my-website-psi-tan-33.vercel.app/logout', {
         method: 'POST'
       }).then(response => response.json())
         .then(data => {
@@ -223,7 +223,7 @@
       const startDate = document.getElementById('new-activity-start-date').value;
       const endDate = document.getElementById('new-activity-end-date').value;
       const maxParticipants = document.getElementById('new-activity-max-participants').value;
-      fetch('https://your-vercel-app.vercel.app/add_activity', {
+      fetch('https://my-website-psi-tan-33.vercel.app/add_activity', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -245,7 +245,7 @@
     }
 
     function applyForActivity(activityId) {
-      fetch(`https://your-vercel-app.vercel.app/apply_for_activity`, {
+      fetch(`https://my-website-psi-tan-33.vercel.app/apply_for_activity`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -265,7 +265,7 @@
       const username = document.getElementById('new-member-username').value;
       const password = document.getElementById('new-member-password').value;
       const role = document.getElementById('new-member-role').value;
-      fetch('https://your-vercel-app.vercel.app/add_member', {
+      fetch('https://my-website-psi-tan-33.vercel.app/add_member', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -285,7 +285,7 @@
     }
 
     function fetchMembers() {
-      fetch('https://your-vercel-app.vercel.app/get_members')
+      fetch('https://my-website-psi-tan-33.vercel.app/get_members')
         .then(response => response.json())
         .then(data => {
           const membersList = document.getElementById('members-list');
@@ -308,7 +308,7 @@
     }
 
     function deleteMember(memberId) {
-      fetch(`https://my-website-psi-tan-33.vercel.app/api/delete_member`, {
+      fetch(`https://my-website-psi-tan-33.vercel.app/delete_member`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -326,4 +326,3 @@
   </script>
 </body>
 </html>
-            const response = await fetch('https://my-website-psi-tan-33.vercel.app/api/tasks');
