@@ -1,17 +1,52 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>动态网页示例</title>
 </head>
 <body>
-    <h1>当前时间：<span id="time">加载中...</span></h1>
+    <!-- 任务发布表单 -->
+    <h2>发布新任务</h2>
+    <form id="taskForm">
+        <input type="text" id="title" placeholder="任务标题" required><br>
+        <textarea id="content" placeholder="任务内容" required></textarea><br>
+        <input type="date" id="deadline" required><br>
+        <button type="submit">发布任务</button>
+    </form>
+
+    <!-- 任务展示列表 -->
+    <h2>已发布任务</h2>
+    <div id="taskList"></div>
+
     <script>
-        // 调用后端API获取时间
-        fetch('https://my-website-psi-tan-33.vercel.app/time')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('time').textContent = data.time;
+        // 提交任务到后端
+        document.getElementById('taskForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // 阻止页面刷新
+            const task = {
+                title: document.getElementById('title').value,
+                content: document.getElementById('content').value,
+                deadline: document.getElementById('deadline').value
+            };
+
+            // 替换为你的Vercel域名
+            await fetch('https://your-app.vercel.app/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(task)
             });
+
+            loadTasks(); // 重新加载任务列表
+        });
+
+        // 加载已有任务
+        async function loadTasks() {
+            const response = await fetch('https://my-website-psi-tan-33.vercel.app/api/tasks');
+            const tasks = await response.json();
+            document.getElementById('taskList').innerHTML = tasks.map(task => `
+                <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+                    <h3>${task.title}</h3>
+                    <p>${task.content}</p>
+                    <p>截止时间：${task.deadline}</p>
+                </div>
+            `).join('');
+        }
+
+        loadTasks(); // 页面加载时执行
     </script>
 </body>
 </html>
