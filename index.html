@@ -1,65 +1,329 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>任务发布与查询系统</title>
-    <style>
-        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
-        .form-section, .query-section { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; }
-        input, textarea, button { margin: 10px 0; width: 100%; padding: 8px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务党支部管理系统</title>
+  <style>
+    body { padding: 20px; max-width: 600px; margin: auto; font-family: Arial, sans-serif; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; }
+    input[type="text"], input[type="password"], textarea, select { width: calc(100% - 22px); padding: 8px; box-sizing: border-box; }
+    button { padding: 8px 12px; cursor: pointer; }
+    .activity { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    .activity h3, .activity p { margin: 0; }
+    .activity h4 { margin-top: 10px; }
+    .activity ul { list-style-type: none; padding-left: 0; }
+    .activity li { margin-bottom: 5px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 发布任务表单 -->
-        <div class="form-section">
-            <h2>发布新任务</h2>
-            <form id="publishForm">
-                <input type="text" id="taskId" placeholder="任务ID（如T001）" required>
-                <textarea id="taskContent" placeholder="任务内容" required></textarea>
-                <button type="submit">发布任务</button>
-            </form>
-        </div>
+  <h1>业务党支部管理系统</h1>
+  
+  <!-- Login Section -->
+  <div id="login-section">
+    <h2>登录</h2>
+    <div class="form-group">
+      <label>用户名</label>
+      <input type="text" id="login-username" placeholder="用户名">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="login-password" placeholder="密码">
+    </div>
+    <button onclick="login()">登录</button>
+  </div>
 
-        <!-- 查询任务表单 -->
-        <div class="query-section">
-            <h2>查询任务</h2>
-            <form id="queryForm">
-                <input type="text" id="searchId" placeholder="输入任务ID查询" required>
-                <button type="submit">查询</button>
-            </form>
-            <div id="result" style="margin-top: 20px;"></div>
-        </div>
+  <!-- Main Section -->
+  <div id="main-section" style="display: none;">
+    <h2>欢迎, <span id="user-name"></span></h2>
+    <button onclick="logout()">退出</button>
+
+    <!-- Manager Section -->
+    <div id="manager-section" style="display: none;">
+      <h2>发布新活动</h2>
+      <div class="form-group">
+        <label>活动标题</label>
+        <input type="text" id="new-activity-title" placeholder="活动标题">
+      </div>
+      <div class="form-group">
+        <label>活动描述</label>
+        <textarea id="new-activity-description" placeholder="活动描述"></textarea>
+      </div>
+      <div class="form-group">
+        <label>开始日期</label>
+        <input type="date" id="new-activity-start-date">
+      </div>
+      <div class="form-group">
+        <label>结束日期</label>
+        <input type="date" id="new-activity-end-date">
+      </div>
+      <div class="form-group">
+        <label>最大参与人数</label>
+        <input type="number" id="new-activity-max-participants" min="1">
+      </div>
+      <button onclick="addActivity()">发布活动</button>
     </div>
 
-    <script>
-        // 替换为你的 Vercel 域名
-        const API_URL = 'https://my-website-psi-tan-33.vercel.app/api/tasks';
+    <!-- Member Management Section -->
+    <div id="member-management-section" style="display: none;">
+      <h2>成员管理</h2>
+      <div>
+        <h3>添加新成员</h3>
+        <div class="form-group">
+          <label>用户名</label>
+          <input type="text" id="new-member-username" placeholder="用户名">
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" id="new-member-password" placeholder="密码">
+        </div>
+        <div class="form-group">
+          <label>角色</label>
+          <select id="new-member-role">
+            <option value="">选择角色</option>
+            <option value="manager">管理员</option>
+            <option value="employee">员工</option>
+          </select>
+        </div>
+        <button onclick="addMember()">添加成员</button>
+      </div>
+      <div>
+        <h3>现有成员</h3>
+        <ul id="members-list"></ul>
+      </div>
+    </div>
 
-        // 提交发布任务
-        document.getElementById('publishForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const task = {
-                id: document.getElementById('taskId').value,
-                content: document.getElementById('taskContent').value
-            };
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(task)
-            });
-            alert('发布成功！');
-        });
+    <!-- Activities List -->
+    <div>
+      <h2>活动列表</h2>
+      <div id="activities-list"></div>
+    </div>
+  </div>
 
-        // 查询任务
-        document.getElementById('queryForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const taskId = document.getElementById('searchId').value;
-            const response = await fetch(`${API_URL}?id=${taskId}`);
-            const task = await response.json();
-            document.getElementById('result').innerHTML = task.content 
-                ? `<p>任务ID：${task.id}<br>内容：${task.content}</p>` 
-                : '<p>未找到该任务！</p>';
+  <script>
+    let currentUser = null;
+    let isManager = false;
+
+    function fetchActivities() {
+      fetch('https://your-vercel-app.vercel.app/add_activity')
+        .then(response => response.json())
+        .then(data => {
+          const activitiesList = document.getElementById('activities-list');
+          activitiesList.innerHTML = '';
+          data.forEach(activity => {
+            const activityDiv = document.createElement('div');
+            activityDiv.className = 'activity';
+            activityDiv.innerHTML = `
+              <h3><strong>活动标题:</strong> ${activity.title}</h3>
+              <p><strong>活动描述:</strong> ${activity.description}</p>
+              <p><strong>活动周期:</strong> ${activity.startDate} 至 ${activity.endDate}</p>
+              <p><strong>最大参与人数:</strong> ${activity.maxParticipants}</p>
+              <div>
+                <h4>参与者</h4>
+                <ul>
+                  ${(activity.participants || []).map(participant => `<li>${participant}</li>`).join('')}
+                </ul>
+              </div>
+              <div>
+                <h4>已分配给</h4>
+                <span>${(activity.assignedTo || []).join(', ') || '尚未分配'}</span>
+              </div>
+              ${!isManager ? '' : `
+                <div>
+                  ${(activity.participants || []).map(participant => `
+                    <label>
+                      <input 
+                        type="checkbox" 
+                        ${activity.assignedTo.includes(participant) ? 'checked' : ''}
+                        onchange="toggleAssignment(${activity.id}, '${participant}')"
+                      />
+                      ${participant}
+                    </label>
+                  `).join('')}
+                </div>
+              `}
+              ${!isManager ? '' : ''}
+              ${currentUser && !activity.participants.includes(currentUser.username) ? `
+                <div>
+                  <button onclick="applyForActivity(${activity.id})">申请</button>
+                </div>
+              ` : ''}
+            `;
+            activitiesList.appendChild(activityDiv);
+          });
         });
-    </script>
+    }
+
+    function toggleAssignment(activityId, participant) {
+      fetch(`https://your-vercel-app.vercel.app/approve_applications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          activityId: activityId,
+          selectedParticipants: Array.from(document.querySelectorAll(`input[name='assignment-${activityId}']:checked`)).map(input => input.value)
+        })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            fetchActivities();
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    function login() {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      fetch('https://your-vercel-app.vercel.app/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            currentUser = data.user;
+            isManager = data.isManager;
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('main-section').style.display = 'block';
+            document.getElementById('user-name').textContent = currentUser.username;
+            if (isManager) {
+              document.getElementById('manager-section').style.display = 'block';
+              document.getElementById('member-management-section').style.display = 'block';
+            }
+            fetchActivities();
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    function logout() {
+      fetch('https://your-vercel-app.vercel.app/logout', {
+        method: 'POST'
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            currentUser = null;
+            isManager = false;
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('main-section').style.display = 'none';
+          }
+        });
+    }
+
+    function addActivity() {
+      const title = document.getElementById('new-activity-title').value;
+      const description = document.getElementById('new-activity-description').value;
+      const startDate = document.getElementById('new-activity-start-date').value;
+      const endDate = document.getElementById('new-activity-end-date').value;
+      const maxParticipants = document.getElementById('new-activity-max-participants').value;
+      fetch('https://your-vercel-app.vercel.app/add_activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title, description, startDate, endDate, maxParticipants })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            fetchActivities();
+            document.getElementById('new-activity-title').value = '';
+            document.getElementById('new-activity-description').value = '';
+            document.getElementById('new-activity-start-date').value = '';
+            document.getElementById('new-activity-end-date').value = '';
+            document.getElementById('new-activity-max-participants').value = '';
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    function applyForActivity(activityId) {
+      fetch(`https://your-vercel-app.vercel.app/apply_for_activity`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ activityId })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            fetchActivities();
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    function addMember() {
+      const username = document.getElementById('new-member-username').value;
+      const password = document.getElementById('new-member-password').value;
+      const role = document.getElementById('new-member-role').value;
+      fetch('https://your-vercel-app.vercel.app/add_member', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password, role })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            fetchMembers();
+            document.getElementById('new-member-username').value = '';
+            document.getElementById('new-member-password').value = '';
+            document.getElementById('new-member-role').value = '';
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+
+    function fetchMembers() {
+      fetch('https://your-vercel-app.vercel.app/get_members')
+        .then(response => response.json())
+        .then(data => {
+          const membersList = document.getElementById('members-list');
+          membersList.innerHTML = '';
+          data.forEach(member => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+              <strong>${member.username}</strong> (${member.role})
+              <button onclick="editMember(${member.id})" style="margin-left: 10px;">编辑</button>
+              <button onclick="deleteMember(${member.id})" style="margin-left: 10px;">删除</button>
+            `;
+            membersList.appendChild(listItem);
+          });
+        });
+    }
+
+    function editMember(memberId) {
+      // TODO: Implement edit functionality
+      alert('Edit functionality not implemented yet.');
+    }
+
+    function deleteMember(memberId) {
+      fetch(`https://my-website-psi-tan-33.vercel.app/api/delete_member`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ memberId })
+      }).then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            fetchMembers();
+          } else {
+            alert(data.message);
+          }
+        });
+    }
+  </script>
 </body>
 </html>
+            const response = await fetch('https://my-website-psi-tan-33.vercel.app/api/tasks');
