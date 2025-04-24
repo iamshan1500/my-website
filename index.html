@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>动态网页示例</title>
+</head>
+<body>
+    <h1>当前时间：<span id="time">加载中...</span></h1>
+    <script>
+        // 调用后端API获取时间
+        fetch('https://my-website-psi-tan-33.vercel.app/time')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('time').textContent = data.time;
+            });
+    </script>
+</body>
+</html>
